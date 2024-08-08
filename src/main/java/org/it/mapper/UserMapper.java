@@ -6,6 +6,9 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 import org.it.pojo.User;
 
+/**
+ *  用户登录/注册
+ */
 @Mapper
 public interface UserMapper {
     // 根据用户名查询用户

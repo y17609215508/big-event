@@ -14,7 +14,7 @@
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="big_event@localhost" uuid="becebc2f-c657-4ac3-bbe9-36f41907f27e">
+    <data-source source="LOCAL" name="big_event@localhost" uuid="7daf72ec-ad5e-4f6a-a254-2093a0e14580">
       <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
       <imported>true</imported>
