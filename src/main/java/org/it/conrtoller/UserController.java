@@ -9,6 +9,7 @@ import org.it.utils.JwtUtil;
 import org.it.utils.Md5Util;
 import org.it.utils.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -80,6 +81,35 @@ public class UserController {
     public Result updateAvatar(@RequestParam("avatarUrl") @URL String avatarUrl) {
         userService.updateAvatar(avatarUrl);
         return Result.success();
+    }
+
+    // 修改密码
+    @PatchMapping("/updatePwd")
+    public Result updatePwd(@RequestBody Map<String,String> params) {
+        // 1、参数校验
+        String oldPwd = params.get("old_pwd");
+        String newPwd = params.get("new_pwd");
+        String rePwd = params.get("re_pwd");
+        if (!StringUtils.hasLength(oldPwd) || !StringUtils.hasLength(newPwd) || !StringUtils.hasLength(rePwd)) {
+            return Result.error("缺少必要参数");
+        }
+
+        // 校验原密码是否正确
+        Map<String,Object> map = ThreadLocalUtil.get();
+        User loginUser = userService.findByUserName((String) map.get("username"));
+        if(!loginUser.getPassword().equals(Md5Util.getMD5String(oldPwd))){
+            return Result.error("原密码填写不正确");
+        }
+
+        // 校验输入的两次密码是否一致
+        if(!rePwd.equals(newPwd)){
+            Result.error("两次新密码输入不一致");
+        }
+
+        // 2、更新密码
+        userService.updatePwd(newPwd);
+        return Result.success();
+
     }
 
 }
