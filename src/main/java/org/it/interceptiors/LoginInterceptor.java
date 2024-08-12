@@ -4,6 +4,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.it.utils.JwtUtil;
 import org.it.utils.ThreadLocalUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -15,6 +18,9 @@ import java.util.Map;
 @Component
 public class LoginInterceptor implements HandlerInterceptor {
 
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
     // 请求到达接口前执行；
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -22,6 +28,12 @@ public class LoginInterceptor implements HandlerInterceptor {
         String token = request.getHeader("Authorization");
         // 验证token
         try {
+            // 从Redis中获取相同的token
+            ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
+            if (operations.get(token) == null) {
+                // token失效了
+                throw new RuntimeException();
+            }
             Map<String, Object> claims = JwtUtil.parseToken(token);
             // 把业务数据存放到ThreadLocal中
             ThreadLocalUtil.set(claims);

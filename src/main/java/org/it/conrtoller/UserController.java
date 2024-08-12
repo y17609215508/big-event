@@ -9,17 +9,23 @@ import org.it.utils.JwtUtil;
 import org.it.utils.Md5Util;
 import org.it.utils.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/user")
 @Validated
 public class UserController {
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     @Autowired
     private UserService userService;
@@ -56,6 +62,9 @@ public class UserController {
             claims.put("id",user.getId());
             claims.put("username",username);
             String token = JwtUtil.genToken(claims);
+            // 将token存储到Redis中
+            ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
+            operations.set(token,token,1, TimeUnit.HOURS);
             return Result.success(token);
         }
         return Result.error("密码错误");
@@ -85,7 +94,7 @@ public class UserController {
 
     // 修改密码
     @PatchMapping("/updatePwd")
-    public Result updatePwd(@RequestBody Map<String,String> params) {
+    public Result updatePwd(@RequestBody Map<String,String> params,@RequestHeader("Authorization") String token) {
         // 1、参数校验
         String oldPwd = params.get("old_pwd");
         String newPwd = params.get("new_pwd");
@@ -108,6 +117,8 @@ public class UserController {
 
         // 2、更新密码
         userService.updatePwd(newPwd);
+        // 删除redis中对应的token
+        stringRedisTemplate.delete(token);
         return Result.success();
 
     }
